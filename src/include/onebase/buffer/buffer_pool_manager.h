@@ -22,6 +22,7 @@ class BufferPoolManager {
   auto DeletePage(page_id_t page_id) -> bool;
   auto FlushPage(page_id_t page_id) -> bool;
   void FlushAllPages();
+  auto AllocateFrame(frame_id_t *frame_id) -> bool;
 
  private:
   size_t pool_size_;
