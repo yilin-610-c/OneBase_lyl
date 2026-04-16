@@ -162,14 +162,14 @@ void BufferPoolManager::FlushAllPages() {
 }
 
 auto BufferPoolManager::AllocateFrame(frame_id_t *frame_id)-> bool {
-  // 1. 先去 free_list_ 里找。如果还有完全没用过的空位，直接拿走！
+  // 1. 先去 free_list_ 里找。如果还有完全没用过的空位，直接拿走
   if(!free_list_.empty()){
     *frame_id=free_list_.front();
     free_list_.pop_front();
     return true;
   }
 
-  // 2. 如果 free_list_ 空了，说明内存满了，去求助 LRU-K 踢人
+  // 2. 如果 free_list_ 空了，说明内存满了，去求助 LRU-K
   if(replacer_->Evict(frame_id)){
     //成功提出，其物理位置就是 *frame_id
     Page *victim_page = &pages_[*frame_id];
