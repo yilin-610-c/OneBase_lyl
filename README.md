@@ -11,6 +11,9 @@
 
 ---
 
+## Recent Updates
+**\[2026.4.15\]** We fixed a bug caused by a dependency cycle defined in onebase_storage. Thanks to Yilin LIU!
+
 ## About
 
 OneBase is a lightweight relational database system designed for teaching the internals of a DBMS. It covers the core components that make up a real database engine — from buffer management and disk-based indexing to SQL query execution and transaction concurrency control.
