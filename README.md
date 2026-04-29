@@ -212,7 +212,6 @@ OneBase/
 │   ├── storage/               # Unit tests for Lab 2
 │   ├── execution/             # Unit tests for Lab 3
 │   └── concurrency/           # Unit tests for Lab 4
-├── reference/                 # Reference implementations (lab1–lab4)
 ├── docs/                      # Lab specifications (English & Chinese)
 ├── tools/                     # Shell and B+ tree printer
 └── third_party/               # libpg_query (SQL parser)
