@@ -473,7 +473,19 @@ auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> Iterator {
   auto *leaf = reinterpret_cast<LeafPage *>(node);
   int index = leaf->KeyIndex(key, comparator_);
   page_id_t leaf_id = page->GetPageId();
+  page_id_t next_leaf_id = INVALID_PAGE_ID;
+  bool at_leaf_end = index >= leaf->GetSize();
+  if (at_leaf_end) {
+    next_leaf_id = leaf->GetNextPageId();
+  }
   bpm_->UnpinPage(leaf_id, false);
+  if (at_leaf_end) {
+    if (next_leaf_id == INVALID_PAGE_ID) {
+      return End();
+    }
+    leaf_id = next_leaf_id;
+    index = 0;
+  }
   return Iterator(leaf_id, index, bpm_);
 }
 

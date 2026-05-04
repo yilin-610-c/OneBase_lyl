@@ -1,6 +1,8 @@
 #include "onebase/execution/executors/projection_executor.h"
 #include "onebase/common/exception.h"
 
+#include <vector>
+
 namespace onebase {
 
 ProjectionExecutor::ProjectionExecutor(ExecutorContext *exec_ctx, const ProjectionPlanNode *plan,
@@ -9,13 +11,31 @@ ProjectionExecutor::ProjectionExecutor(ExecutorContext *exec_ctx, const Projecti
 
 void ProjectionExecutor::Init() {
   // TODO(student): Initialize child executor
-  throw NotImplementedException("ProjectionExecutor::Init");
+  child_executor_->Init();
 }
 
 auto ProjectionExecutor::Next(Tuple *tuple, RID *rid) -> bool {
   // TODO(student): Get next tuple from child, evaluate each expression in
   // plan_->GetExpressions() against it, and build output tuple from the results.
-  throw NotImplementedException("ProjectionExecutor::Next");
+  Tuple child_tuple;
+  RID child_rid;
+  if (!child_executor_->Next(&child_tuple, &child_rid)) {
+    return false;
+  }
+
+  std::vector<Value> values;
+  const auto &expressions = plan_->GetExpressions();
+  values.reserve(expressions.size());
+  for (const auto &expr : expressions) {
+    values.push_back(expr->Evaluate(&child_tuple, &child_executor_->GetOutputSchema()));
+  }
+
+  *tuple = Tuple(std::move(values));
+  tuple->SetRID(child_rid);
+  if (rid != nullptr) {
+    *rid = child_rid;
+  }
+  return true;
 }
 
 }  // namespace onebase

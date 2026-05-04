@@ -1,6 +1,9 @@
 #include "onebase/execution/executors/delete_executor.h"
 #include "onebase/common/exception.h"
 
+#include <stdexcept>
+#include <vector>
+
 namespace onebase {
 
 DeleteExecutor::DeleteExecutor(ExecutorContext *exec_ctx, const DeletePlanNode *plan,
@@ -9,7 +12,8 @@ DeleteExecutor::DeleteExecutor(ExecutorContext *exec_ctx, const DeletePlanNode *
 
 void DeleteExecutor::Init() {
   // TODO(student): Initialize child executor
-  throw NotImplementedException("DeleteExecutor::Init");
+  child_executor_->Init();
+  has_deleted_ = false;
 }
 
 auto DeleteExecutor::Next(Tuple *tuple, RID *rid) -> bool {
@@ -17,7 +21,42 @@ auto DeleteExecutor::Next(Tuple *tuple, RID *rid) -> bool {
   // - Get tuples from child, delete from table_heap
   // - Update any indexes
   // - Return count of deleted rows
-  throw NotImplementedException("DeleteExecutor::Next");
+  if (has_deleted_) {
+    return false;
+  }
+  has_deleted_ = true;
+
+  auto *catalog = GetExecutorContext()->GetCatalog();
+  auto *table_info = catalog->GetTable(plan_->GetTableOid());
+  if (table_info == nullptr) {
+    throw std::runtime_error("Table not found for delete");
+  }
+
+  const auto &schema = table_info->schema_;
+  auto indexes = catalog->GetTableIndexes(table_info->name_);
+
+  int32_t delete_count = 0;
+  Tuple child_tuple;
+  RID child_rid;
+  while (child_executor_->Next(&child_tuple, &child_rid)) {
+    for (auto *index_info : indexes) {
+      if (!index_info->SupportsPointLookup()) {
+        continue;
+      }
+      auto key_attr = index_info->GetLookupAttr();
+      auto key = child_tuple.GetValue(&schema, key_attr).GetAsInteger();
+      index_info->RemoveEntry(key, child_rid);
+    }
+
+    table_info->table_->DeleteTuple(child_rid);
+    ++delete_count;
+  }
+
+  *tuple = Tuple(std::vector<Value>{Value(TypeId::INTEGER, delete_count)});
+  if (rid != nullptr) {
+    *rid = RID{};
+  }
+  return true;
 }
 
 }  // namespace onebase

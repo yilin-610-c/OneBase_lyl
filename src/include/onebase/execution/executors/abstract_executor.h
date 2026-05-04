@@ -12,7 +12,7 @@ class AbstractExecutor {
   virtual ~AbstractExecutor() = default;
 
   virtual void Init() = 0;
-  virtual auto Next(Tuple *tuple, RID *rid) -> bool = 0;
+  virtual auto Next(Tuple *tuple, RID *rid) -> bool = 0; //纯虚函数，子类必须实现
   virtual auto GetOutputSchema() const -> const Schema & = 0;
 
  protected:
